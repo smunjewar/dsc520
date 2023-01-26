@@ -1,0 +1,240 @@
+---
+title: "assignment_06_MunjewarSheetal"
+author: "Sheetal M"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+bibliography: bibliography.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Install and Load required packages :
+```{r}
+# Package names
+# packages <- c("ggplot2","dplyr","tidyr","magrittr","tidyverse","purrr")
+packages <- c("ggplot2","dplyr","magrittr","tidyverse","purrr","pander","pandoc")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+# Markdown Basics Examples :
+
+## Demonstrate Heading:  
+
+# Heading level 1  
+## Heading level 2  
+### Heading level 3  
+#### Heading level 4  
+##### Heading level 5  
+
+# Demonstrate fonts Examples :  
+
+Demonstrate **bold** word in the sentence.   
+Demonstrate *Italic* word in the sentence. 
+
+## Add a Quote
+
+## Markdown Quotes
+> What is R Markdown? R Markdown is a way of generating fully reproducible documents,
+> in which both text and code can be combined.  
+> That’s how things can be made as bullets,bold, italics, links, or run inline R codes.
+
+## Markdown Nested Quotes
+> What is R Markdown? R Markdown is a way of generating fully reproducible documents,
+> in which both text and code can be combined.  
+>
+>> That’s how things can be made as bullets,bold, italics, links, or run inline R codes.
+
+## Markdown Quotes with other elements 
+
+> #### The annual results look great!
+>
+> - Revenue was doubled.
+> - Profits were multifold.
+>
+>  *Everything* worked as per  **plan**.
+
+
+## Favorite Foods ( Ordered )
+
+1. Mongo
+2. Apple
+3. Orange
+4. Banana
+
+## Favorite Foods ( Un-ordered )
+
+- Mongo
+- Apple
+- Orange
+- Banana
+
+## Images
+
+Here's an Marigold flower image, copie ramdomly from internet:
+
+![Marigold flower](E:\Data_Science_DSC510\DSC520-Statistics\dsc520\assignments\assignment06\marigold-durango-series-red-flower-wm_700_1944x.jpg)
+Move on to next one ... :)
+
+## Add an Equation
+
+\begin{align}
+\dot{x} & = \sigma(y-x) \\
+\dot{y} & = \rho x - y - xz \\
+\dot{z} & = -\beta z + xy
+\end{align}
+
+
+## Add a Footnote  
+
+ ^[This line will be printed as a footnote.]
+ 
+ Here is a sample foot note text body reference.[^1]
+
+ [^1]: This footnote will appear at the bottom of the page.
+
+## Add Citations
+
+- @Manual{R for Everyone,
+    title = {R for Everyone},
+    author = { Jared P. Lander},
+    year = {February 25, 2010},
+    pages = {31,94},
+    url = {https://www.R-project.org/},}
+
+- @Manual{Discovering Statistics Using R,
+    title = {Discovering Statistics Using R},
+    author = { Andy Field, Andy P. Field, Jeremy Miles},
+    Item Weight = { 5.07 pounds},
+    Dimensions = {7.6 x 1.6 x 10.4 inches},
+    journal = {Geology},
+    year = {February 25, 2010},}
+
+@book{lander2014r,
+  title={R for Everyone: Advanced Analytics and Graphics},
+  author={Lander, J.P.},
+  isbn={9780321888037},
+  lccn={2013027407},
+  series={Addison-Wesley data and analytics series},
+  url={https://books.google.com/books?id=3eBVAgAAQBAJ},
+  year={2014},
+  publisher={Addison-Wesley}
+}
+
+@book{field2012discovering,
+  title={Discovering Statistics Using R},
+  author={Field, A. and Miles, J. and Field, Z.},
+  isbn={9781446258460},
+  url={https://books.google.com/books?id=wd2K2zC3swIC},
+  year={2012},
+  publisher={SAGE Publications}
+}
+* R for Everyone
+* Discovering Statistics Using R
+
+# Inline Code
+
+```{r, include=FALSE}
+
+library(ggplot2)
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+covid_df <- read.csv("data/nytimes/covid-19-data/us-counties.csv")
+head(covid_df)
+summary(covid_df)
+
+covid_df$date <- as.Date(covid_df$date)
+
+california_df <- covid_df[ which( covid_df$state == "California"), ]
+ny_df <- covid_df[ which( covid_df$state == "New York"), ]
+florida_df <- covid_df[ which( covid_df$state == "Florida"), ]
+
+# Plot the number of cases in Florida using `geom_line()`
+ggplot(data=florida_df, aes(x=florida_df$date, y=florida_df$cases, group=1)) + geom_line()
+
+ggplot(data=florida_df, aes(x = date, group=1)) +
+  geom_line(aes(y = cases, colour = "Florida")) +
+  geom_line(data=ny_df, aes(y = cases,colour="New York")) +
+  geom_line(data=california_df, aes(y = cases, colour="California")) +
+  scale_colour_manual("",
+                      breaks = c("Florida", "New York", "California"),
+                      values = c("darkred", "darkgreen", "steelblue")) +
+  xlab("date") + ylab("Cases")
+
+
+```
+
+## NY Times COVID-19 Data
+
+```{r NY Times COVID-19 Data, echo=FALSE}
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+ny_df <- read.csv("data/nytimes/covid-19-data/us-counties.csv")
+# head(ny_df)
+# summary(ny_df)
+ggplot(data=ny_df, aes(x=ny_df$county, y=ny_df$deaths, group=1)) + geom_line()
+
+```
+## R4DS Height vs Earnings
+
+```{r R4DS Height vs Earnings , echo=FALSE}
+library(ggplot2)
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+heights_df <- read.csv("data/r4ds/heights.csv")
+#head(heights_df)
+#summary(heights_df)
+ggplot(heights_df, aes(x = heights_df$race)) + geom_bar()
+```
+
+# Tables
+
+| First_Name    | Last_Name   | Address     |
+| :---          |    :----:   |        ---: |
+| Sheetal       | Munjewar    | Omaha,NE    |
+| John          | Hopkins     | Baltimor,MD |
+
+## Knitr Table with Kable
+
+```{r }
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+ny_df <- read.csv("data/nytimes/covid-19-data/us-counties.csv")
+head(ny_df)
+knitr::kable(head(ny_df[, 1:4]), "simple", caption = "One Ring to Rule Them All")
+```
+
+## Pandoc Table - (multiline, simple, grid, rmarkdown)
+```{r}
+# Reference - https://cran.r-project.org/web/packages/pander/vignettes/pandoc_table.html
+#install.packages("pander")
+#install.packages("pandoc")
+library(pander)  # to laod pandoc.table()
+library(pandoc)
+
+
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+ny_df <- read.csv("data/nytimes/covid-19-data/us-counties.csv")
+ny_df %>% select(date,state,cases,deaths) %>% head(.,n=10)
+m <- ny_df %>% select(date,state,cases,deaths) %>% head(.,n=10)
+colnames(m) <- c('Date', 'State','Cases', 'Deaths')
+pandoc.table(m, keep.line.breaks = TRUE)
+pandoc.table(m, keep.line.breaks = TRUE,style='simple')
+pandoc.table(m, keep.line.breaks = TRUE,style='grid')
+```
+
+## References

@@ -1,47 +1,47 @@
 # Assignment: ASSIGNMENT 4
 # Name: Munjewar, Sheetal
-# Date: 2023-01-08
+# Date: 2023-01-22
 
-## Load the ggplot2 package
+# Load the ggplot2 package
 library(ggplot2)
 theme_set(theme_minimal())
 
-## Set the working directory to the root of your DSC 520 directory
-##setwd("/home/jdoe/Workspaces/dsc520")
+# Set the working directory to the root of your DSC 520 directory
+# setwd("/home/jdoe/Workspaces/dsc520")
 setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
 
-## Load the `data/r4ds/heights.csv` to
+# Load the `data/r4ds/heights.csv` to
 heights_df <- read.csv("data/r4ds/heights.csv")
 head(heights_df)
 summary(heights_df)
-factor(heights_df$sex)
-##--To check the structure
+# factor(heights_df$sex) 
+# To check the structure
 str(heights_df)
 
 # https://ggplot2.tidyverse.org/reference/geom_boxplot.html
-## Create boxplots of sex vs. earn and race vs. earn using `geom_point()` and `geom_boxplot()`
-## sex vs. earn
+# Create boxplots of sex vs. earn and race vs. earn using `geom_point()` and `geom_boxplot()`
+# sex vs. earn
 A <- ggplot(heights_df, aes(x=heights_df$sex, y=heights_df$earn)) 
 A + geom_point() + geom_boxplot()
-?geom_point()
+# ?geom_point()
 
-## race vs. earn
+# race vs. earn
   ggplot(heights_df, aes(x=heights_df$race, y=heights_df$earn)) + 
   geom_point() + 
   geom_boxplot(outlier.colour = "Blue", outlier.fill = NULL) + 
   xlab("Race") + 
   ylab("Earning")
 
-##-- Remove object 
-## AB <- NULL
+# Remove object 
+# AB <- NULL
        
 # https://ggplot2.tidyverse.org/reference/geom_bar.html
-## Using `geom_bar()` plot a bar chart of the number of records for each `sex`
+# Using `geom_bar()` plot a bar chart of the number of records for each `sex`
 ggplot(heights_df, aes(x=heights_df$sex)) + geom_bar()
 
-## Using `geom_bar()` plot a bar chart of the number of records for each race
+# Using `geom_bar()` plot a bar chart of the number of records for each race
 ggplot(heights_df, aes(y = heights_df$race )) + geom_bar()
-ggplot(heights_df, aes(x = heights_df$race )) + geom_bar()
+# ggplot(heights_df, aes(x = heights_df$race )) + geom_bar()
 
 ## Create a horizontal bar chart by adding `coord_flip()` to the previous plot
 ggplot(heights_df, aes(x = heights_df$race)) + geom_bar() + coord_flip()
