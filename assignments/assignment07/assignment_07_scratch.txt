@@ -1,0 +1,133 @@
+
+#-- Quick Markdone reference : 
+https://www.youtube.com/watch?v=v048ru5v0BE
+
+Assignment-07 References:
+
+** Question ** What are options for producing distributions in R?
+
+** Question ** What is binomial distribution?
+	Reference - https://www.youtube.com/watch?v=WWv0RUxDfbs
+	
+		When looking at a sample size of independent trials/experiments (n), 
+		the binomial distribution models the probability (p) of successes or failures. 
+		If there’s a test with only two outcomes of pass or fail – and that test is 
+		taken 100 times (n) – the probability (p) of the outcome which would be either 
+		passing grades or failing grades. 
+
+** Question ** What is poisson distribution?
+	Reference - https://www.youtube.com/watch?v=cPOChr_kuQs
+	
+	Within a certain or fixed amount of time the poisson distribution describes the probability 
+	of an event occurring. For example, the number of customers going through a Starbucks drive-through during rush hour? 
+
+
+** Question ** We’ve covered this before, but now that we are further in the course – what are summary or descriptive statistics?  Why do they matter and when do you use them?
+
+	Looking at data set, description statistics summarize and organize the information. 
+	The distribution, central tendency (mean/median/mode), and variability measures are the 
+	three main types of descriptive statistics. 
+	
+	These characteristics or observations about the data can be described quantitatively 
+	(using the numbers or percentages) or by using graphs/charts to help summarize and help 
+	communicate the analysis.  
+	
+	This allows us to make decisions based on the data sets and to share our findings 
+	in meaningful ways to different audiences.
+
+** Question ** What are correlation and covariance and what methods do you have in R to perform?  How should you visualize correlation and covariance?
+	Reference - https://www.youtube.com/watch?v=iJEBxsKDDoE
+	
+	Correlation and covariance describes the relationship (if any) between two or more variables. 
+	Correlation determines how closely two variables are related and covariance determines how much two variables differ from each other. 
+	
+	In R, we can use different methods.
+		cor - calculates correlation (can be used on a numerical matrix)
+		cov - calculates covariance or the variance between variables
+		GGally package (and the ggpairs function) helps to create visualizations
+
+** Question ** What is a T-Test?
+	Reference - https://www.youtube.com/watch?v=x1RFWHV2VUU
+	
+	A T-Test tests the mean of a set of data or compares the means of two groups to determine the relationship 
+	(if any) and the difference between the two. We can use t.test in R to calculate these numbers. 
+ 
+	Reference - https://www.statology.org/t-test-real-life-examples/
+
+** Question ** What is ANOVA?  How is it used?
+
+	Reference - https://www.almabetter.com/blogs/5-real-time-use-cases-of-anova
+
+** Question ** What is correlation?  What is positive vs negative correlation?
+** Question ** What is standardization and correlation coefficient?
+** Question ** What is Pearson’s correlation coefficient?
+** Question ** What is the significance of the correlation coefficient?
+** Question ** What are confidence intervals?
+** Question ** What does it mean when there is statistical significance?
+** Question ** What are confidence intervals?
+** Question ** What is causality and what do we need to be cautious of?
+** Question ** What are the two types of correlation?
+** Question ** How do we handle missing data?
+** Question ** What is Pearson’s correlation coefficient?
+** Question ** What are P-Values?
+** Question ** How is r² used?  What is it?
+** Question ** What is Spearman’s correlation coefficient and when is it used?
+** Question ** What is Kendall’s tau? When is it used?
+	
+	Reference - https://www.youtube.com/watch?v=D56dvoVrBBE
+
+	Kendall's tau (non-parametric) is a correlation that should be used when the dataset 
+	is smaller "with a large number of tied ranks" (p. 225). According to the text, 
+	more accurate generalizations can be determined from this correlation versus Spearman's. 
+ 
+
+** Question ** What is bootstrapping?  When do you do this?
+** Question ** What is biserial and point-biserial correlation?
+** Question ** What is partial correlation?
+** Question ** How do you compare correlations? Why would you do this?
+** Question ** How do you calculate the effect size?
+** Question ** How do you report correlation coefficients?
+
+
+DugganWhat is binomial distribution?
+    
+
+
+
+
+
+https://www.youtube.com/watch?v=WWv0RUxDfbs
+  
+    
+    
+    
+      
+        
+        YouTube
+        
+      
+      
+      
+      Binomial distribution | Probability and Statistics | Khan Academy
+Khan Academy | 11:51 | 1.9M views | 8 years ago
+
+      
+      
+    
+    
+  
+  
+  
+  
+  
+       
+      
+        
+        
+      
+  
+   
+   
+
+
+<https://teams.microsoft.com/l/message/19:94e50da215574f86a25aaade516bfa8d@thread.tacv2/1674674727741?tenantId=26feded2-a083-4777-8052-06ad5ef53556&amp;groupId=d4810d0c-6b8e-4696-b30e-e329d8c1d4f6&amp;parentMessageId=1674674727741&amp;teamName=DSC 520 Statistics for Data Science&amp;channelName=DSC 520 T301 T302 T303 2233 Winter 2022&amp;createdTime=1674674727741&amp;allowXTenantAccess=false>
