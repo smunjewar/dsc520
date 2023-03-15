@@ -1,0 +1,103 @@
+---
+html_document: default
+author: "Sheetal M"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+title: "assignment_10.1_MunjewarSheetal"
+word_document: default
+link-citations: yes
+---
+
+## Install and Load required packages :
+```{r, echo=TRUE}
+# Package names
+# packages <- c("ggplot2","dplyr","tidyr","magrittr","tidyverse","purrr")
+# Package Rweka - to call read.arff()
+
+packages <- c("broom","dplyr","RWeka")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+# Assignment related Articles 
+# https://towardsdatascience.com/implementing-binary-logistic-regression-in-r-7d802a9d98fe
+# https://www.datacamp.com/tutorial/logistic-regression-R
+# https://www.tutorialspoint.com/r/r_logistic_regression.htm
+# https://www.youtube.com/watch?v=C4N3_XJJ-jU
+
+```
+
+## Problem statement : Predict one year life expectancy of lung cancer patients post surgery.
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520") 
+
+``` {r}
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520\\data") 
+
+## Load data from "ThoraricSurgery.arff"
+pat_data <- read.arff("ThoraricSurgery.arff")
+str(pat_data)
+# nrow(pat_data)
+# Alternate option for reference -  
+# install.packages("foreign")
+# thoracic.df <- foreign::read.arff("data/ThoraricSurgery.arff")
+
+```
+
+
+##  Generalized Linear Model 
+```{r Generalized Linear Model}
+pat_mod01 <- glm(Risk1Yr ~ ., data = pat_data, family = "binomial")
+```
+
+##  Model Summary 
+```{r Model Summary}
+summary(pat_mod01)
+```
+
+## Variables with significance
+
+1. DGNDGN5 Most Significant
+2. PRE9F Significant
+3. PRE14OC14 Significant
+
+
+## Dataframe with new predicted column predict_Risk
+```{r New prediction}
+
+#mod_plus <- augment(pat_mod01, type type.predict="response")
+#class(mod_plus)
+pat_mod01_predict <- augment(pat_mod01, type.predict="response") %>% mutate(predict_Risk = round(.fitted))
+# Name additional columns and check class.
+# class(mod_plus)
+# names(mod_plus)
+
+```
+
+## Confusion matrix to calculate accurracy
+```{r confusion}
+pat_mod01_predict %>% select(Risk1Yr, predict_Risk) %>% table()
+```
+
+## c. Accuracy of the Model
+accuracy = correctly predicted / total Predicted * 100
+
+```{r Accuracy of the Model}
+accuracy <- (3 + 390) / (3 + 10 + 67 + 390)
+accuracy <- accuracy * 100
+print(paste(round(accuracy), "%"))
+```
+
+

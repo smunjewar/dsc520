@@ -1,0 +1,275 @@
+---
+title: "assignment_07_MunjewarSheetal-03"
+author: "Sheetal M"
+date: "`r Sys.Date()`"
+geometry: "left=1cm,right=1cm,top=2cm,bottom=2cm"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  html_document:
+    toc: yes
+    toc_depth: 5
+#bibliography: bibliography.bib
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Install and Load required packages:
+
+```{r, echo=FALSE}
+# Package names
+# packages <- c("ggplot2","dplyr","tidyr","magrittr","tidyverse","purrr")
+packages <- c("lmtest","ggplot2","dplyr","magrittr","tidyverse","broom","purrr","GGally","scales","reshape","moments","ggpubr","readxl")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+```
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520") 
+
+```{r - Read Data}
+
+library("readxl")
+# xls files
+housing.data <- read_excel("week-7-housing.xlsx")
+str(housing.data)
+
+```
+## Explain any transformations or modifications you made to the dataset.
+
+```{r transformations or modifications you made to the dataset}
+
+# Calculate number for NA values.
+sum(is.na(housing.data))
+
+colnames(housing.data)[1] <- "sale_date"
+colnames(housing.data)[2] <- "sale_price"
+
+str(housing.data)
+
+```
+
+## Create two variables; one that will contain the variables Sale Price and Square Foot of Lot (same variables used from previous assignment on simple regression) and one that will contain Sale Price and several additional predictors of your choice. Explain the basis for your additional predictor selections.
+
+```{r Create Model Variables }
+
+# Find co-relation between variables using cor()
+cor(housing.data$sale_price,housing.data$square_feet_total_living)
+cor(housing.data$sale_price,housing.data$bedrooms)
+cor(housing.data$sale_price,housing.data$bath_full_count)
+cor(housing.data$sale_price,housing.data$building_grade)
+cor(housing.data$sale_price,housing.data$sq_ft_lot)
+cor(housing.data$sale_price,housing.data$year_built)
+
+#Model_01 <- lm(sale_price ~ bath_full_count, data = housing.data)
+#Model_02 <- lm(sale_price ~ building_grade + square_feet_total_living + year_built , data = housing.data)
+
+Model_01 <- lm(sale_price ~ bath_full_count, data = housing.data)
+Model_02 <- lm(sale_price ~ bath_full_count + building_grade + square_feet_total_living , data = housing.data)
+
+# Check for NULL/NA and observation row count.
+# is.null(housing.data$sale_price)
+# is.na(housing.data$square_feet_total_living)
+# nrow(housing_df)
+
+```
+
+## IExecute a summary() function on two variables defined in the previous step to compare the model results. What are the R2 and Adjusted R2 statistics? Explain what these results tell you about the overall model. Did the inclusion of the additional predictors help explain any large variations found in Sale Price?
+
+```{r Interpret Model Summary }
+
+#Execute a summary() function on two variables defined in the previous step to compare the model results. What are the R2 and Adjusted R2 statistics? Explain what these results tell you about the overall model. Did the inclusion of the additional predictors help explain any large variations found in Sale Price?
+
+summary(Model_01)
+# plot(Model_01)
+summary(Model_02)
+# plot(Model_02)
+
+#  Reference:-
+#  Interpret the R and R2 square result after watching video : 
+#  https://www.youtube.com/watch?v=bMccdk8EdGo
+#  R2 and P-Values 
+#  https://www.youtube.com/watch?v=xxFYro8QuXA
+
+```
+
+### R2 and Adjusted R2 for Model_01 are: 0.08114 and 0.08107
+### R2 and Adjusted R2 for Model_02 are: 0.2152 and 0.215  
+
+* We are seeing R2 variance improvement with multiple predictors in model.
+* Model_01 explain 8% of variances sales price.
+* Model_02 explain 22% of variance of data.
+* Consider R2 variance of data, Model-02 must be a good fit. 
+
+## Standardized Betas - Considering the parameters of the multiple regression model you have created. What are the standardized betas for each parameter and what do the values indicate?
+
+(Intercept)              -4.713e+06  - Y-intercept.
+building_grade            3.243e+04  - Beta 1
+square_feet_total_living  1.464e+02  - Beta 2
+year_built                23706e+03  - Beta 3
+
+* Beta 1 : 35214.013       - bath_full_count           
+* Beta 2 : 40205.127       - building_grade            
+* Beta 3 : 140.658         - square_feet_total_living    
+
+* Beta 1 indicates change in unit of bath_full_count will cost $35214.013 in sale price.
+* Beta 2 indicates change in unit of building_grade will lift sale price by $40205.127.
+* Beta 3 indicates change in unit of square_feet_total_living will change sale price by $140.658.
+
+
+## Calculate the confidence intervals for the parameters in your model and explain what the results indicate.
+
+```{r Calculate the confidence intervals }
+
+# reference -  https://www.statology.org/confint-r/
+confint(Model_01, level = 0.95)
+confint(Model_02, level = 0.95)
+
+```
+### confidence interval - Model_01
+* 95% C.I. for year_built = [166700.6,187288.8]
+* For model-1 with confidence level 95%, Sale price mean for bath_full_count variable lies 166700.6 and 187288.8.
+
+### confidence interval - Model_02
+* 95% C.I. for bath_full_count             = [23998.8596  ,46429.1657]
+* 95% C.I. for building_grade              = [31635.3556  ,48774.8984]
+* 95% C.I. for square_feet_total_living    = [130.8361    ,150.4792]
+
+* For model_2 with confidence level 95%, Sale price mean for bath_full_count variable lies between [23998.8596,46429.1657]
+* For model_2 with confidence level 95%, Sale price mean for building_grade variable lies between [31635.3556,48774.8984]
+* For model_2 with confidence level 95%, Sale price mean for square_feet_total_living variable lies between [130.8361,150.4792]
+
+## Assess the improvement of the new model compared to your original model (simple regression model) by testing whether this change is significant by performing an analysis of variance.
+
+* Model_01 explain 8% of variances of the data.
+* Model_02 explain 22% of variance of data.
+* Model_02 is much improved in comparison with Model_01.
+
+## Perform casewise diagnostics to identify outliers and/or influential cases, storing each function's output in a dataframe assigned to a unique variable name.
+
+```{r Discovering Stats Books Reference }
+
+housing.data$residuals <- resid(Model_02)
+housing.data$std_residuals <- rstandard(Model_02)
+housing.data$stu_residuals <- rstudent(Model_02)
+housing.data$cooks_distance <- cooks.distance(Model_02)
+housing.data$dfbeta <- dfbeta(Model_02)
+housing.data$dffit <- dffits(Model_02)
+housing.data$leverage <- hatvalues(Model_02)
+housing.data$covariance_ratios <- covratio(Model_02)
+
+head(housing.data$residuals)
+housing.data
+
+write.table(housing.data, "Housing_updated_data.dat", sep = "\t", row.names = FALSE)
+
+```
+## Calculate the standardized residuals using the appropriate command, specifying those that are +-2, storing the results of large residuals in a variable you create.
+
+```{r Calculate the standardized residuals }
+
+# housing.data$std_residuals > 2 | housing.data$std_residuals < -2
+housing.data$large_residual <- housing.data$std_residuals > 2 | housing.data$std_residuals < -2
+
+```
+
+## Use the appropriate function to show the sum of large residuals.
+```{r sum of large residuals }
+
+# round(housing.data, digits = 10)
+sum(housing.data$large_residual)
+
+```
+
+
+## Which specific variables have large residuals (only cases that evaluate as TRUE)?
+
+```{r Large Residuals TRUE values only }
+
+housing.data[ housing.data$large_residual,c("bath_full_count","building_grade","square_feet_total_living","year_built","std_residuals") ]
+
+```
+* Total observations : 12865
+* Total Larger residuals reported : 314
+* Percent Residual out of limits : 314/12865*100 = 2.44 ( well within expected +/- 2.5 limits)
+
+## Investigate further by calculating the leverage, cooks distance, and covariance rations. Comment on all cases that are problematics.
+
+```{r cooks distance }
+housing.data[ housing.data$large_residual,c("cooks_distance","leverage","covariance_ratios") ]
+```
+* Total observations : 12865
+* Average leverage : (k + 1/n) = (3+1)/12865 = 0.000310   ( k is number of predictors in a model.)
+* Twice/Thrice of 0.000310  = 0.00093 (0.000310*3) - Leverage finding - Most of the cases are 
+within the boundaries ( < 0.00093), three times of the average.
+* Even covariance ration (+1/-1) for all large residuals are upper side of 1 and there are few above one on the border.
+
+## Perform the necessary calculations to assess the assumption of independence and state if the condition is met or not.
+
+durbinWatsonTest(Model_02)
+
+#### lag Autocorrelation D-W Statistic p-value
+#### 1       0.7365797     0.5268369       0
+#### Alternative hypothesis: rho != 0
+ 
+* Conservative rule suggest values below 1 and above 3, will raise alarm. In our case D-W stats 
+  reported 0.52 which is less than 1 raise the alarm and p-value = 0 is again a concern of no co-relationship.
+
+## Perform the necessary calculations to assess the assumption of no multicollinearity and state if the condition is met or not.
+
+
+```{r assumption of no multicollinearity}
+
+# vif(Model_02)
+# 1/vif(Model_02)
+# mean(vif(Model_02))
+
+#> vif(Model_02)
+#         bath_full_count           building_grade square_feet_total_living 
+#                1.389415                 2.286707                 2.464910 
+#> 1/vif(Model_02)
+#         bath_full_count           building_grade square_feet_total_living 
+#               0.7197276                0.4373100                0.4056944 
+#> mean(vif(Model_02))
+#[1] 2.04701
+               
+
+```
+
+* multicollinearity - VIF values are all below 10, and tolerance stats all well above 0.2 and 
+  Average VIF value i.e 2 is above 1 is a concern to conclude no collinearity within the data
+
+
+## Visually check the assumptions related to the residuals using the plot() and hist() functions. Summarize what each graph is informing you of and if any anomalies are present.
+
+```{r}
+
+plot(Model_02)
+hist(housing.data$stu_residuals)
+hist(rstudent(Model_02))
+
+Model_02$fitted <- Model_02$fitted.values
+#Model_02$df.residual
+
+ggplot(sample = housing.data$std_residuals, stat = "qq") + labs(x = "Theoretical VAlues", y = "Observed Values")
+
+ggplot(Model_02, aes(Model_02$fitted.values, Model_02$residuals)) + geom_point() + geom_smooth(method = "lm", colours = "Blue") + labs(x = "Fitted Values", y = "Stu Residuals")
+
+
+```
+
+## Overall, is this regression model unbiased? If an unbiased regression model, what does this tell us about the sample vs. the entire population model?
+
+* Based on VIF mean value[2], Model can be consider biased.
+

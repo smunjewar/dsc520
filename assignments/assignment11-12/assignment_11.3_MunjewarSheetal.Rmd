@@ -1,0 +1,92 @@
+---
+html_document: default
+author: "Sheetal M"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+title: "assignment_11.3_MunjewarSheetal"
+word_document: default
+link-citations: yes
+---
+
+## Install and Load required packages :
+```{r }
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+# Package names
+# packages <- c("ggplot2","dplyr","tidyr","magrittr","tidyverse","purrr")
+packages <- c("broom","dplyr","RWeka","class","ggplot2","caret","formatR")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+```
+
+## K-means algorithm
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520") 
+
+``` {r load binary and trinary dataset into the data famres }
+
+# Set the working directory to the root of your DSC 520 directory
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520") 
+
+# Load data from data/binary-classifier-data.csv
+df <- read.csv("data/clustering-data.csv")
+str(df)
+nrow(df)
+
+```
+## Visualize dataset - Scatter Plot
+```{r visualize}
+ggplot(data = df, aes(x, y)) + geom_point()
+```
+
+## Fit the dataset using k-means from k=2 to k=12
+```{r fit_data}
+par(mfrow = c(2, 2))
+
+# Set seed
+set.seed(1)
+df.mean <- list()
+i <- 1
+for (k in 2:12) {
+  km.out <- kmeans(df, centers = k, nstart = 20)
+  df.distance <- data.frame()
+  for (cl in 1:k) {
+    cl_points <- df[km.out$cluster == cl,]
+    center_point <- km.out$centers[cl,]
+    x_dist <- (cl_points['x'] - center_point['x'])^2
+    y_dist <- (cl_points['y'] - center_point['y'])^2
+    distance <- sqrt(x_dist + y_dist)
+    df.distance <- rbind(df.distance, distance)
+  }
+  df.mean[i] <- mean(df.distance$x)
+  i <- i + 1
+  plot(df, col = km.out$cluster, main = paste("k=", k))
+  #ggplot(data = df, aes(x, y, color = km.out$cluster)) + geom_point()
+  #ggplot(data = df, aes(x, y)) + geom_point()
+}
+```
+
+## Plot with x as k and average distance as y
+```{r avg_plot}
+plot(2:12, df.mean, type = "b",
+     xlab = "Number of Clusters",
+     ylab = "Avg. distance from cluster center")
+```
+
+## Elbow point.
+From graph I can conclude elbow point is 6.

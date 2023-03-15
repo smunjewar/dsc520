@@ -1,0 +1,323 @@
+---
+title: "U.K. Accidents- Ten Years History."
+author: "Sheetal Munjewar"
+date: "`r Sys.Date()`"
+geometry: "left=1cm,right=1cm,top=2cm,bottom=2cm"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  html_document:
+    toc: yes
+    toc_depth: 5
+---
+
+## Introduction
+
+Road safety is the common concern around the world, As a part of this exercise we are going to explore U.K road safety data about the circumstances of personal injury road accidents in GB from 2005 to 2014,
+
+Data Source link : https://www.kaggle.com/datasets/benoit72/uk-accidents-10-years-history-with-many-variables
+
+Different data Sources files (cvs):
+
+Accident file: main data set contains information about accident severity, weather, location, date, hour, day of week, road type…
+Vehicle file : contains information about vehicle type, vehicle model, engine size, driver sex, driver age, car age…
+Casualty file: contains information about casualty severity, age, sex social class, casualty type, pedestrian or car passenger…
+Lookup file  : contains the text description of all variable code in the three files
+
+License - 
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+
+## Research Questions
+
+* Accidents are on rise or decline over the years ?
+* Co-relation between weather with number or severity of an accident?
+* Does driver age has an effect on the number of accident?
+* What is the relation between hour, day, week, month with number of fatal accident?
+* Are certain car models safer than others?
+* Is the social class of a casualty dependent of the accident severity?
+
+## Approach
+
+Data must be collected from legal source ( Publicly available ), Check for missing data, merge the different data sources/files into one data frame. In out case we have four data sources. Map column codes with text string for look up table, map and assign column names. map log/lat into the countries. Filter required columns to address research questions and use graphs for visualizations.
+
+## How your approach addresses (fully or partially) the problem.
+
+Project approach is the address following future forcast :
+
+Can you forecast the future daily/weekly/monthly accidents?
+Action that can prevent future accident based on variable relationship and predictions ?
+Fatal accidents can be predict or avoided ?
+Variables contributing rise in fatal accidents ?
+
+## Data 
+
+Four data Sources(cvs):
+
+Accident file: main data set contains information about accident severity, weather, location, date, hour, day of week, road type…
+Vehicle file : contains information about vehicle type, vehicle model, engine size, driver sex, driver age, car age…
+Casualty file: contains information about casualty severity, age, sex social class, casualty type, pedestrian or car passenger…
+Lookup file  : contains the text description of all variable code in the three files
+
+Sources : https://www.kaggle.com/datasets/benoit72/uk-accidents-10-years-history-with-many-variables
+
+### function declarations
+```{r setup, include=FALSE}
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520\\assignments\\Final-Project")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+# Quick look 
+# Data Wrangling Function 
+# https://towardsdatascience.com/7-data-wrangling-r-functions-for-your-next-data-science-project-in-under-5-minutes-d5a4ad55f99b
+
+```
+```{r function_declarations, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+plotHistogram <- function(dataFrame, xField, fillField, labelX, labelY, title, legendTitle) {
+  plot <- ggplot(dataFrame, aes(xField, fill = fillField)) +
+    geom_histogram(stat = "count", position = "dodge", binwidth = 10) +
+    labs(x = labelX, y = labelY, title = title, fill = legendTitle)
+  return(plot)
+}
+
+# Install and Load required packages :
+# packages <- c("ggplot2","dplyr","readxl")
+# "broom", "ggplot2", "corrplot", "fastDummies", "caret","plyr", "dplyr", "ggmap",  "gridExtra"
+packages <- c("broom","dplyr","readxl","ggplot2","corrplot","caret","plyr")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+```
+
+### Load Data 
+  * Total three data sources and one label index excel.
+  * Accident_Index field, unique identifier that refers to one accident and common to link all data sets.
+
+```{r load_data}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+library(readxl)
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+Accidents <- read.csv("assignments/Final-Project/Accidents0514.csv")
+Casualties <- read.csv("assignments/Final-Project/Casualties0514.csv")
+Vehicles <- read.csv("assignments/Final-Project/Vehicles0514.csv")
+```
+
+### Merge data ( Three datasets into one )
+```{r Merge data}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+df <- merge(Accidents, Casualties, by='Accident_Index')
+df <- merge(df, Vehicles, by='Accident_Index')
+rm(Accidents, Casualties, Vehicles)
+# str(df)
+# head(df)
+```
+
+### Populate column code with meaningful descriptios using Excel file Road-Accident-Safety-Data-Guide.xls into new column.
+
+```{r Replace code with descriptions into a new column }
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+
+Location_code <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Police Force")
+df <- left_join(df, Location_code, by=c("Police_Force"="code"))
+df <- dplyr::rename(df, Location=label)
+rm(Location_code)
+
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+Junction_type <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Junction Detail")
+df <- left_join(df, Junction_type, by=c("Junction_Detail"="code"))
+df <- dplyr::rename(df, Junction=label)
+rm(Junction_type)
+
+Light_conditions <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Light Conditions")
+df <- left_join(df, Light_conditions, by=c("Light_Conditions" = "code"))
+df <- dplyr::rename(df, Lighting = label)
+rm(Light_conditions)
+
+Weather_conditions <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Weather")
+df <- left_join(df, Weather_conditions, by=c("Weather_Conditions"="code"))
+df <- dplyr::rename(df, Weather = label)
+rm(Weather_conditions)
+
+Surface_conditions <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Road Surface")
+df <- left_join(df, Surface_conditions, by = c("Road_Surface_Conditions" = "code"))
+df <- dplyr::rename(df, Surface = label)
+rm(Surface_conditions)
+
+Vehicle_type <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Vehicle Type")
+df <- left_join(df, Vehicle_type, by = c("Vehicle_Type" = "code"))
+df <- dplyr::rename(df, Vehicle = label)
+rm(Vehicle_type)
+
+Vehicle_manoeuvre <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Vehicle Manoeuvre")
+df <- left_join(df, Vehicle_manoeuvre, by = c("Vehicle_Manoeuvre" = "code"))
+df <- dplyr::rename(df, Manoeuvre = label)
+rm(Vehicle_manoeuvre)
+
+Skidding <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Skidding and Overturning")
+df <- left_join(df, Skidding, by = c("Skidding_and_Overturning" = "code"))
+df <- dplyr::rename(df, Skidding = label)
+rm(Skidding)
+
+Journey_purpose <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Journey Purpose")
+df <- left_join(df, Journey_purpose, by = c("Journey_Purpose_of_Driver" = "code"))
+df <- dplyr::rename(df, Journey = label)
+rm(Journey_purpose)
+
+Age_band <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Age Band")
+df <- left_join(df, Age_band, by = c("Age_Band_of_Driver" = "code"))
+df <- dplyr::rename(df, Age_Band = label)
+rm(Age_band)
+
+Casualty_severity <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Accident Severity")
+df <- left_join(df, Casualty_severity, by=c("Casualty_Severity"="code"))
+df <- dplyr::rename(df, Casualty_Outcome=label)
+rm(Casualty_severity)
+
+```
+
+### Get rid of excess data columns.
+```{r Exclude columns }
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+df <- df[!names(df) %in% c("Driver_Home_Area_Type","Driver_IMD_Decile","Propulsion_Code","Age_Band_of_Driver","1st_Point_of_Impact","Hit_Object_off_Carriageway","Vehicle_Leaving_Carriageway","Hit_Object_in_Carriageway","Junction_Location","Vehicle_Location-Restricted_Lane","Towing_and_Articulation","Pedestrian_Road_Maintenance_Worker","Pedestrian_Movement","Pedestrian_Location","Casualty_Reference","LSOA_of_Accident_Location","Did_Police_Officer_Attend_Scene_of_Accident","Urban_or_Rural_Area","Carriageway_Hazards","Pedestrian_Crossing-Physical_Facilities","Pedestrian_Crossing-Human_Control","2nd_Road_Class","2nd_Road_Number","Junction_Control","Junction_Detail","Local_Authority_(Highway)")]
+
+#dim(df)
+#head(df)
+```
+
+### Change Date column to date format.
+```{r convert to date format}
+df$Date<- as.Date(df$Date, "%m/%d/%Y")
+#str(df$Date)
+#head(df$Date)
+```
+
+### Adding new columns for aggregation and summerization.
+
+```{r Derive new Year and Month columns for summerization}
+df$Year <- format(as.Date(df$Date), "%Y")
+df$Month <- format(as.Date(df$Date), "%m")
+
+```
+
+### Display final data set and save it in seperate file.
+```{r Export filtered data to cvs format for future reference }
+head(df)
+# write.csv(df, file = "filtered_eported_data.csv")
+```
+
+### What do you not know how to do right now that you need to learn to import and cleanup your dataset?
+  
+  * In above steps data sets are merged and final draft has been displayed using head() command above.
+  * Date column must have "NA" values, during next step use appropriate filter to pick selected data.
+
+### Discuss how you plan to uncover new information in the data that is not self-evident.
+  
+  * Data columns not relevant to address problem questions and with no co-relations ewith variables has already been eliminated in steps above.
+  
+### What are different ways you could look at this data to answer the questions you want to answer?
+
+  * Very first step is to look at data, can trust data source and set, data populated correctly, noise is data (missing,NA or NULL), identify variables and co-rleations among them, will it address out problem questions ?
+  
+### Do you plan to slice and dice the data in different ways, create new variables, or join separate data frames to create new summary information? Explain.
+
+  * Identify joining column to merge data from all sources, used description excel to replaced selected columns code with meaningful description given in excel. Change data type od Date filed from string to date. Create new valirable Month and Year for future aggregation and reporting.
+
+### How could you summarize your data to answer key questions?
+  
+  * Once data is ready, next steps will be to use different plotting functions and understand co-orelations between various variables, and try to get problem questions addresses and visualize relationship using various plotting options in next steps. 
+
+
+## Required Packages
+
+Base packages plus 
+"ggplot2",
+"dplyr",
+"magrittr",
+"tidyverse",
+"broom",
+"purrr",
+"GGally",
+"scales",
+"reshape",
+"moments",
+"ggpubr",
+"readxl" .. and more on need basis.
+
+
+## Plots and Table Needs
+    
+scatter plots, time-series plot and histograms to analyze and visualize the data patterns.
+
+#### What types of plots and tables will help you to illustrate the findings to your questions? Ensure that all graph plots have axis titles, legend if necessary, scales are appropriate, appropriate geoms used, etc.).
+
+  * In addtion to packages, I have create seperate function plotHistogram() - Mentions above in function declaration chunk. with all input parameters it will plot histogram with x and y axis label with title.
+
+  * Will Standardize same for scatterplots and more based on project need in coming weeks.
+
+## Questions for future steps
+
+  * Wide data set, wrangling will be challenging to all together at one place and pick selective columns to address out research questions, In addition fear of unknown as we move forward. 
+
+  * Will focus on flitering to eliminate no needed data to generate meaningful outcome to address problem questions.
+
+
+
+###  ********* NOTE - Scratch work *************** 
+###  THis section is not to demonstrate any thing, its scratch section to play around dataset to understand variables and its co-relations and try out plot function to learn about it. it can be consider as a prep work for final week project.
+
+```{r weather_plot}
+
+# unique(df$Weather)
+# any(is.na(df$Vehicle))
+# any(is.na(df$Vehicle))
+
+plotHistogram(df, df$Weather, df$Accident_Severity, "Weather Condition", "# of Accidents", "Accidents by Weather Condition", "Accident Severity")
+unique(df$Vehicle)
+
+plotHistogram(df, df$Vehicle, df$Casualty_Outcome, "Vehicle", "Casualty", "Vehicle and Casualty", "Name Please")
+
+any(is.na(df$Year))
+any(is.null(df$Year))
+any(is.na(df$Date))
+
+colSums(is.na(df))
+sum(is.na(df$Date))
+
+df1 <- df %>% select(Accident_Index, Location, Accident_Severity, Number_of_Vehicles, Number_of_Casualties, Date, Day_of_Week, Month, Year, Time, Road_Type, Lighting, Weather, Surface, Skidding, ) %>% group_by(Accident_Index) %>%  filter(row_number() == 1)
+
+by_year_count <- df1 %>% select(Accident_Index, Year) %>% group_by(Year) %>% dplyr::summarise(total.count = n()) %>% arrange(total.count) 
+
+chart1 <- ggplot(data=by_year_count, aes(x=Year, y=total.count)) + geom_bar(stat="identity") 
+chart1
+
+```

@@ -1,0 +1,200 @@
+---
+html_document: default
+author: "Sheetal M"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+title: "assignment_11.1_MunjewarSheetal"
+word_document: default
+link-citations: yes
+---
+
+## Install and Load required packages :
+```{r }
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+# Package names
+# packages <- c("ggplot2","dplyr","tidyr","magrittr","tidyverse","purrr")
+packages <- c("broom","dplyr","RWeka","class","ggplot2","caret","formatR")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+```
+
+## Problem statement : Predict one year life expectancy of lung cancer patients post surgery.
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520") 
+
+``` {r}
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520") 
+
+## Load data from data/binary-classifier-data.csv
+bc_data <- read.csv("data/binary-classifier-data.csv")
+str(bc_data)
+#nrow(pat_data)
+```
+## Convert label column data type into factor 
+```{r Factor Conversion}
+bc_data$label <- as.factor(bc_data$label)
+str(bc_data)
+```
+
+## Visualize data
+```{r visualize}
+ggplot(data = bc_data, aes(x,y, color=factor(label))) + geom_point()
+```
+
+##  Generalized Linear Model 
+```{r Generalized Linear Model}
+bc_mod01 <- glm(label ~ ., data = bc_data, family = "binomial")
+```
+
+##  Model Summary 
+```{r Model Summary}
+summary(bc_mod01)
+```
+
+## Variables with significance
+1. y is Most Significant
+
+## Dataframe with new predicted column predict_Risk
+```{r New prediction}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+#mod_plus <- augment(pat_mod01, type type.predict="response")
+#class(mod_plus)
+bc_mod01_predict <- augment(bc_mod01, type.predict="response") %>% mutate(predict_Risk = round(.fitted))
+
+# Name additional columns and check class.
+# class(mod_plus)
+# names(mod_plus)
+# https://cyberactive.bellevue.edu/ultra/courses/_514803_1/cl/outline
+# alternate options using predict function() - predict(bc_mod01, type = "response")
+```
+
+## Confusion matrix to calculate accurracy
+```{r confusion}
+bc_mod01_predict %>% select(label, predict_Risk) %>% table()
+# Alternate option :
+# predict <- predict(logit, data_test, type = 'response')
+# table_mat <- table(data_test$income, predict > 0.5)
+
+```
+
+## Accuracy of the Model
+accuracy = correctly predicted / total Predicted * 100
+
+```{r Accuracy of the Model}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+
+# Evaluating accuracy of Regression Models - https://www.youtube.com/watch?v=03FrK8d2QVQ
+# Accuracy using confusion matric : https://towardsdatascience.com/confusion-matrix-for-your-multi-class-machine-learning-model-ff9aa3bf7826#:~:text=Accuracy%3A%20It%20gives%20you%20the,TN%2BFP%2BFN).
+
+accuracy <- (429 + 445) / (429 + 338 + 286 + 445)
+accuracy <- accuracy * 100
+print(paste(round(accuracy), "%"))
+```
+
+## KNN Nearest neighbors model on actual data set.
+```{r nearest_neighbors}
+
+near_mod <- knn(train = bc_data, test = bc_data , cl = bc_data$label, k=5)
+summary(near_mod)
+
+# Calculate the proportion of correct classification for k = 5
+acc_mod1 <- 100 * sum(bc_data$label == near_mod)/NROW(bc_data$label)
+#acc_mod1
+
+# Calculate accuracy.
+table(near_mod , bc_data$label)
+confusionMatrix(table(near_mod , bc_data$label))
+
+
+```
+
+## Get actual false and true labels from dataset
+```{r actual_value}
+paste("True values count:", length(bc_data$label[bc_data$label == 1]))
+paste("False values count:", length(bc_data$label[bc_data$label == 0]))
+
+table(bc_data$label)
+
+# count_unique <- rapply(bc_data, function(x) length(unique(x)))
+# count_unique
+# n_distinct(bc_data$label)
+# bc_data %>% group_by(bc_data$label) %>% summarize(count_distinct = n_distinct(x))
+# length(unique(bc_data$label))
+```
+If we use same data for training and testing the accuracy of the nearest neighbour algorithm is
+99.73%
+
+## Creating random 80% records for training set and 20% test set
+```{r test}
+ran <- sample(1:nrow(bc_data), 0.8 * nrow(bc_data))
+train_data <- bc_data[ran, ]
+test_data <- bc_data[-ran, ]
+test_data
+nrow(train_data)
+nrow(test_data)
+
+```
+## Train model on trainig data set
+```{r train_model}
+
+knn_mod <- knn(train = train_data, test = test_data, cl = train_data$label, k = 5)
+summary(knn_mod)
+
+# Calculate the proportion of correct classification for k = 5
+acc_mod <- 100 * sum(test_data$label == knn_mod)/NROW(test_data$label)
+acc_mod
+
+# Calculate accuracy.
+table(knn_mod , test_data$label)
+confusionMatrix(table(knn_mod , test_data$label))
+
+# NROW(test_data)
+# NROW(test_data$label)
+
+```
+
+## Get actual false and true labels from test dataset
+```{r actual_value_test}
+paste("True values count:", length(test_data$label[test_data$label == 1]))
+paste("False values count:", length(test_data$label[test_data$label == 0]))
+```
+
+If we use same 80% dataset to train and 20% dataset to test the accuracy of the nearest neighbour algorithm is
+99.33%
+
+## Accuracy Comparison
+* Logistic Regression: 58%
+* Knn with 100% training and test data: 98.26%
+* Knn with 80% training and 20% test data: 97:00%
+
+## Reason for Accuracy difference
+Based on derived values, KNN algorithm accuracy is more in comparison with logistic regression. Obvious reason for difference in accuracy will be KNN is more efficient for distinguishable closed clustered, as showed in scatter plot above.
+

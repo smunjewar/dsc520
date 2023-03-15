@@ -1,0 +1,603 @@
+---
+title: "U.K.Accidents-Ten Years History."
+author: "Sheetal Munjewar"
+date: "`r Sys.Date()`"
+geometry: "left=1cm,right=1cm,top=2cm,bottom=2cm"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  html_document:
+    toc: yes
+    toc_depth: 5
+---
+
+## Introduction
+
+Road safety is the common concern around the world, As a part of this exercise we are going to explore U.K road safety data about the circumstances of personal injury road accidents in GB from 2005 to 2014,
+
+Data Source link : https://www.kaggle.com/datasets/benoit72/uk-accidents-10-years-history-with-many-variables
+
+Different data Sources files (cvs):
+
+Accident file: main data set contains information about accident severity, weather, location, date, hour, day of week, road type…
+Vehicle file : contains information about vehicle type, vehicle model, engine size, driver sex, driver age, car age…
+Casualty file: contains information about casualty severity, age, sex social class, casualty type, pedestrian or car passenger…
+Lookup file  : contains the text description of all variable code in the three files
+
+License - 
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+
+## Problem statement / Research Questions
+
+* Accidents are on rise or decline over the years ?
+* Co-relation between weather with number or severity of an accident?
+* Does driver age has an effect on the number of accident?
+* What is the relation between hour, day, week, month with number of fatal accident?
+* Are certain car models safer than others?
+* Is the social class of a casualty dependent of the accident severity?
+
+## Approach
+
+Data must be collected from legal source ( Publicly available ), Check for missing data, merge the different data sources/files into one data frame. In out case we have four data sources. Map column codes with text string for look up table, map and assign column names. map log/lat into the countries. Filter required columns to address research questions and use graphs for visualizations.
+
+## How your approach addresses (fully or partially) the problem.
+
+Project approach is the address following future forcast :
+
+Can you forecast the future daily/weekly/monthly accidents?
+Action that can prevent future accident based on variable relationship and predictions ?
+Fatal accidents can be predict or avoided ?
+Variables contributing rise in fatal accidents ?
+
+
+## Insights from Data
+
+*   Reduction in the number of reported accidents between 2005 and 2014.
+*   Accidents reported on Friday certainly in lead compared to other week days.
+*   Accidents tend to occur on the business hours when people commute to work.
+*   Contingency table show,  proportion of fatal accidents is higher than during the day, while we observe the opposite result for the slight accidents, results proved our conclusion using chi-square test.
+*   Casualty Outcome proportion conclude that probability of an accident to be fatal is higher when it's foggy or misty. 
+*   More "slight" accidents happen in urban areas; however, "fatal" accidents ratio is more in a rural area compared to  total accidents occurs in both areas.
+*   Probability of an accident to be fatal is higher on road that are "Not a junction or within 20 metres of a junction". On the contrary an accident happening on a roundabout is much more likely to be a slight accident and not likely at all to be a fatal accident.
+*   Road surface with "Oil or Diesel" can cause more accidents ( Slight,Serious and Fatal)
+*   Death rate of drivers aged over 75 is much higher probably because they are more vulnerable to injuries, or they are driving old car.
+
+
+## Limitations
+*   Data set is based on Rural and Urban categorization, however actual location and popluation, country geo region specific data and transparency is limited.
+*   Data set findings are limited and sampling based, however actual vechicle and its categorization with model and approximate count across is missing.
+*   Road conditions and changes across the decade are limited.
+*   New traffic rule and regulation like change in speed limit on highway, expansion of roads and manu more changes over the decade are limited.
+
+## Improvements 
+Data set used for analysis does have missing information and it doesn't cover all the facts, further data correction can improve accuracy and evaluate more observation in future.
+
+## Concluding Remarks
+
+The total number of vehicle accidents are the decline, likelihood of being involved in a collision is higher on Fridays while the lowest is Saturday and Sunday. A severe injury or terminal outcome are a lot more likely to occur if the vehicle comes to an abrupt stop rather than skidding. Young people are more likely to drive recklessly and be involved in a collision calls for more data,the full moon has no effect whatsoever on the number of vehicle collisions.
+
+Test of Independence, shows data findings are 95% CI statistically correct as we always have a p-value < 0.05
+
+## Required Packages
+
+Base packages plus  
+"ggplot2",
+"dplyr",
+"broom",
+"purrr",
+"GGally",
+"scales",
+"caret",
+"moments",
+"ggpubr",
+"readxl",
+"corrplot"
+
+
+## Data 
+
+Four data Sources(cvs):
+
+Accident file: main data set contains information about accident severity, weather, location, date, hour, day of week, road type…
+Vehicle file : contains information about vehicle type, vehicle model, engine size, driver sex, driver age, car age…
+Casualty file: contains information about casualty severity, age, sex social class, casualty type, pedestrian or car passenger…
+Lookup file  : contains the text description of all variable code in the three files
+
+Sources : https://www.kaggle.com/datasets/benoit72/uk-accidents-10-years-history-with-many-variables
+
+### Function declarations
+```{r setup, include=FALSE}
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520\\assignments\\Final-Project")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+# Quick look 
+# Data Wrangling Function 
+# https://towardsdatascience.com/7-data-wrangling-r-functions-for-your-next-data-science-project-in-under-5-minutes-d5a4ad55f99b
+
+```
+```{r function_declarations, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+func_plotHistogram <- function(dataFrame, xField, fillField, labelX, labelY, title, legendTitle) {
+  plot <- ggplot(dataFrame, aes(xField, fill = fillField)) +
+    geom_histogram(stat = "count", position = "dodge", binwidth = 10) +
+    labs(x = labelX, y = labelY, title = title, fill = legendTitle)
+  return(plot)
+}
+
+# Install and Load required packages :
+# packages <- c("ggplot2","dplyr","readxl")
+# "broom", "ggplot2", "corrplot", "fastDummies", "caret","plyr", "dplyr", "ggmap",  "gridExtra"
+#- percent from Scales
+packages <- c("broom","dplyr","readxl","ggplot2","corrplot","caret","plyr","scales")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+options(dplyr.summarise.inform = FALSE)
+
+```
+
+### Load Data 
+  * Total three data sources and one label index excel.
+  * Accident_Index field, unique identifier that refers to one accident and common to link all data sets.
+
+```{r load_data}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+library(readxl)
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+Accidents <- read.csv("assignments/Final-Project/Accidents0514.csv")
+Casualties <- read.csv("assignments/Final-Project/Casualties0514.csv")
+Vehicles <- read.csv("assignments/Final-Project/Vehicles0514.csv")
+```
+
+### Merge data ( Three datasets into one )
+```{r Merge data}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+df <- merge(Accidents, Casualties, by='Accident_Index')
+df <- merge(df, Vehicles, by='Accident_Index')
+rm(Accidents, Casualties, Vehicles)
+# str(df)
+# head(df)
+```
+
+### Populate column code with meaningful descriptios using Excel file Road-Accident-Safety-Data-Guide.xls into new column.
+
+```{r Replace code with descriptions into a new column }
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+setwd("E:\\Data_Science_DSC510\\DSC520-Statistics\\dsc520")
+
+Day_of_Week <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Day of Week")
+df <- left_join(df, Day_of_Week, by=c("Day_of_Week"="code"))
+df <- dplyr::rename(df, day_of_Week=label)
+rm(Day_of_Week)
+
+Location_code <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Police Force")
+df <- left_join(df, Location_code, by=c("Police_Force"="code"))
+df <- dplyr::rename(df, Location=label)
+rm(Location_code)
+
+Junction_type <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Junction Detail")
+df <- left_join(df, Junction_type, by=c("Junction_Detail"="code"))
+df <- dplyr::rename(df, Junction=label)
+rm(Junction_type)
+
+Light_conditions <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Light Conditions")
+df <- left_join(df, Light_conditions, by=c("Light_Conditions" = "code"))
+df <- dplyr::rename(df, Lighting = label)
+rm(Light_conditions)
+
+Weather_conditions <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Weather")
+df <- left_join(df, Weather_conditions, by=c("Weather_Conditions"="code"))
+df <- dplyr::rename(df, Weather = label)
+rm(Weather_conditions)
+
+Surface_conditions <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Road Surface")
+df <- left_join(df, Surface_conditions, by = c("Road_Surface_Conditions" = "code"))
+df <- dplyr::rename(df, Surface = label)
+rm(Surface_conditions)
+
+Vehicle_type <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Vehicle Type")
+df <- left_join(df, Vehicle_type, by = c("Vehicle_Type" = "code"))
+df <- dplyr::rename(df, Vehicle = label)
+rm(Vehicle_type)
+
+Vehicle_manoeuvre <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Vehicle Manoeuvre")
+df <- left_join(df, Vehicle_manoeuvre, by = c("Vehicle_Manoeuvre" = "code"))
+df <- dplyr::rename(df, Manoeuvre = label)
+rm(Vehicle_manoeuvre)
+
+Skidding <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Skidding and Overturning")
+df <- left_join(df, Skidding, by = c("Skidding_and_Overturning" = "code"))
+df <- dplyr::rename(df, Skidding = label)
+rm(Skidding)
+
+Journey_purpose <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Journey Purpose")
+df <- left_join(df, Journey_purpose, by = c("Journey_Purpose_of_Driver" = "code"))
+df <- dplyr::rename(df, Journey = label)
+rm(Journey_purpose)
+
+Age_band <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Age Band")
+df <- left_join(df, Age_band, by = c("Age_Band_of_Driver" = "code"))
+df <- dplyr::rename(df, Age_Band = label)
+rm(Age_band)
+
+Casualty_severity <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Accident Severity")
+df <- left_join(df, Casualty_severity, by=c("Casualty_Severity"="code"))
+df <- dplyr::rename(df, Casualty_Outcome=label)
+rm(Casualty_severity)
+
+Road_Surface <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Road Surface")
+df <- left_join(df, Road_Surface, by=c("Road_Type"="code"))
+df <- dplyr::rename(df, Road_Surface=label)
+rm(Road_Surface)
+
+Urban_Rural <- read_excel("assignments/Final-Project/Road-Accident-Safety-Data-Guide.xls", sheet="Urban Rural")
+df <- left_join(df, Urban_Rural, by=c("Urban_or_Rural_Area"="code"))
+df <- dplyr::rename(df, Urban_Rural=label)
+rm(Urban_Rural)
+
+```
+
+### Get rid of excess data columns.
+```{r Exclude columns }
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+
+df <- df[!names(df) %in% c("Driver_Home_Area_Type","Driver_IMD_Decile","Propulsion_Code","Age_Band_of_Driver","1st_Point_of_Impact","Hit_Object_off_Carriageway","Vehicle_Leaving_Carriageway","Hit_Object_in_Carriageway","Junction_Location","Vehicle_Location-Restricted_Lane","Towing_and_Articulation","Pedestrian_Road_Maintenance_Worker","Pedestrian_Movement","Pedestrian_Location","Casualty_Reference","LSOA_of_Accident_Location","Did_Police_Officer_Attend_Scene_of_Accident","Carriageway_Hazards","Pedestrian_Crossing-Physical_Facilities","Pedestrian_Crossing-Human_Control","2nd_Road_Class","2nd_Road_Number","Junction_Control","Junction_Detail","Local_Authority_(Highway)")]
+
+#dim(df)
+#head(df)
+#unique(df$Skidding)
+
+```
+
+
+### Change Date column to date format.
+```{r convert to date format}
+df$Date<- as.Date(df$Date, "%m/%d/%Y")
+#str(df$Date)
+#head(df$Date)
+```
+
+### Adding new columns for aggregation and summerization.
+
+```{r Derive new Year and Month columns for summerization}
+df$Year <- format(as.Date(df$Date), "%Y")
+df$Month <- format(as.Date(df$Date), "%m")
+df$time_slot <- as.numeric(substr(df$Time,0,2))
+
+```
+
+### Check "NA" counts in dataset 
+```{r Check for NA values}
+# Check "NA" count in  dataset.
+sort(sapply(df, function(x) sum(is.na(x))),decreasing = TRUE)
+```
+
+### Display final data set and save it in seperate file.
+```{r Export filtered data to cvs format for future reference }
+# write.csv(df, file = "filtered_eported_data.csv")
+head(df)
+```
+
+
+## Data Analysis and Visualization Section :
+
+###  Graph indicate reduction in the number of reported accidents between 2005 and 2014. 
+
+```{r Overall accidents over the years}
+df1 <- df %>% select(Accident_Index, Location, Accident_Severity, Number_of_Vehicles, Number_of_Casualties, Date, Day_of_Week, Month, Year, Time, Road_Type, Lighting, Weather, Surface, Skidding, ) %>% group_by(Accident_Index) %>%  filter(row_number() == 1)
+
+by_year_count <- df1 %>% select(Accident_Index, Year) %>% filter(Year !="NA") %>% group_by(Year) %>% dplyr::summarise(total.count = n()) %>% arrange(total.count) 
+
+chart1 <- ggplot(data=by_year_count, aes(x=Year, y=total.count)) + geom_bar(stat="identity") 
+chart1
+
+```
+
+###  Accident count on specific day of the week.
+
+```{r Accident count on specific day of the week.}
+df %>% 
+  group_by(day_of_Week) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=day_of_Week, y=total_accidents)) +
+    geom_bar(stat="identity", fill="steelblue")+
+    geom_text(aes(label=total_accidents), vjust=1.6, color="white", size=3.5)+
+    theme_minimal()
+```
+
+
+###  Accident by hours .
+```{r Accident by hours}
+df %>% 
+  group_by(time_slot) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=time_slot, y=total_accidents)) +
+    geom_bar(stat="identity", fill="steelblue")+
+    geom_text(aes(label=total_accidents), vjust=1.6, color="black", size=3)+
+    scale_x_continuous(breaks = round(seq(0, 24, by = 2),0)) +
+    ggtitle("Total Accidents by Hours from 2005 to 2014") +
+    xlab("Hours") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank())
+```
+
+### Slight Accident by hours
+```{r Slight Accident by hours}
+head(df$Casualty_Severity)
+df %>% 
+  filter(Casualty_Outcome =="Slight")%>%
+  group_by(time_slot) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=time_slot, y=total_accidents)) +
+    geom_bar(stat="identity", fill="steelblue")+
+    geom_text(aes(label=total_accidents), vjust=1.6, color="black", size=3)+
+    scale_x_continuous(breaks = round(seq(0, 24, by = 2),0)) +
+    ggtitle("Total Slight Accidents by Hours from 2005 to 2014") +
+    xlab("Hours") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank())
+
+```
+
+### Serious Accident by hours
+```{r Serious Accident by hours}
+head(df$Casualty_Severity)
+df %>% 
+  filter(Casualty_Outcome =="Serious")%>%
+  group_by(time_slot) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=time_slot, y=total_accidents)) +
+    geom_bar(stat="identity", fill="steelblue")+
+    geom_text(aes(label=total_accidents), vjust=1.6, color="black", size=3)+
+    scale_x_continuous(breaks = round(seq(0, 24, by = 2),0)) +
+    ggtitle("Total Serious Accidents by Hours from 2005 to 2014") +
+    xlab("Hours") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank())
+
+```
+
+### Fatal Accidents by hours
+```{r Fatal Accident by hours}
+head(df$Casualty_Severity)
+df %>% 
+  filter(Casualty_Outcome =="Fatal")%>%
+  group_by(time_slot) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=time_slot, y=total_accidents)) +
+    geom_bar(stat="identity", fill="steelblue")+
+    geom_text(aes(label=total_accidents), vjust=1.6, color="black", size=3)+
+    scale_x_continuous(breaks = round(seq(0, 24, by = 2),0)) +
+    ggtitle("Total Fatal Accidents by Hours from 2005 to 2014") +
+    xlab("Hours") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank())
+
+```
+
+### Contingency Table and Row Percentage 
+```{r Contingency Table and Row Percentage }
+
+# Looking at the proportion table it seems that the hour when the accident occurs has an impact on the accident severity. We can observe that during the night the proportion of fatal accidents is higher than during the day while we observe the opposite result for the slight accidents. Result can be conclude using chi-square test.
+
+acc_time_severity<-table(df$time_slot,df$Casualty_Outcome)
+prop.table(acc_time_severity,1)
+
+```
+
+### Accident Severity by Weather COndition
+```{r Accident Severity by Weather COndition}
+
+df %>% 
+  group_by(Weather,Casualty_Outcome) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=Casualty_Outcome, y=total_accidents,fill=Weather)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident Severity by Weather Condition") +
+    xlab("Accident Severity") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+### Accident Severity Proportion by Weather Condition
+
+```{r Accident Severity Proportion by Weather Condition}
+df %>% 
+  group_by(Weather,Casualty_Outcome) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+  mutate(freq = percent(total_accidents / sum(total_accidents))) %>%
+    ggplot(aes(x=Casualty_Outcome, y=freq,fill=Weather)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident Severity Proportion by Weather") +
+    xlab("Accident Severity") + ylab("Accident Proportion")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),
+          axis.text.y=element_blank(),axis.ticks.y=element_blank())
+
+```
+
+### Accident Severity by Area Type
+```{r Accident Severity by Area Type}
+
+df %>% 
+  filter(Urban_Rural !="Unallocated")%>%
+  group_by(Urban_Rural,Casualty_Outcome) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=Casualty_Outcome, y=total_accidents,fill=Urban_Rural)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident Severity by Area Type") +
+    xlab("Accident Severity") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Accident Severity Proportion by Area Type
+```{r Accident Severity Proportion by Area Type}
+
+df %>% 
+  group_by(Urban_Rural,Casualty_Outcome) %>%   
+  filter(Urban_Rural!="Unallocated")%>%
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+  mutate(freq = percent(total_accidents / sum(total_accidents))) %>%
+    ggplot(aes(x=Casualty_Outcome, y=freq,fill=Urban_Rural)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident Severity Proportion by Area Type") +
+    xlab("Accident Severity") + ylab("Accident Severity Proportion")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),
+          axis.ticks.y=element_blank())
+
+
+```
+
+
+### Road conditions contributing accidents.
+
+```{r Road conditions contributing accidents.}
+df %>% 
+  group_by(Road_Surface,Casualty_Outcome) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=Casualty_Outcome, y=total_accidents,fill=Road_Surface)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident count by Road conditions") +
+    xlab("Accident Severity") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1))
+
+df %>% 
+  group_by(Surface,Casualty_Outcome) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=Casualty_Outcome, y=total_accidents,fill=Surface)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident by road conditions impacted by Weather") +
+    xlab("Accident Severity") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+### Accident Severity by Junction Type
+```{r Accident Severity by Junction Type}
+
+df %>% 
+  group_by(Junction,Casualty_Outcome) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=Casualty_Outcome, y=total_accidents,fill=Junction)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident Severity by Junction Type") +
+    xlab("Accident Severity") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+### Accident Severity Proportion by Junction Type
+```{r Accident Severity Proportion by Junction Type}
+
+df %>% 
+  group_by(Junction,Casualty_Outcome) %>%   
+    filter(Junction!="Data missing or out of range")%>%
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+  mutate(freq = percent(total_accidents / sum(total_accidents))) %>%
+    ggplot(aes(x=Casualty_Outcome, y=freq,fill=Junction)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident Severity Proportion by Junction Type") +
+    xlab("Accident Severity") + ylab("Accident Severity Proportion")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),
+          axis.ticks.y=element_blank())
+
+```
+
+### Accurancy Matrix
+```{r}
+
+# We can see that the probability of an accident to be fatal is higher on road that ar enot a junction or within 20 metres of a junction. On the contrary an accident happening on a roundabout is much more likely to be a slight accident and not likely at all to be a fatal accident.
+
+# Why I removed the rows labelled as "Data missing or out of range"? There's only 26 rows with missing information over million rows so it is safe to remove them. And also as we can see in the below frquency table the proportion of the fatal accident for "Data missing or out of range" would be missleading in our plot 5/26~19% while the second highest proportion is just 3%.
+
+tt<-table(df$Junction,df$Casualty_Outcome) 
+prop.table(tt,1)
+```
+
+
+### Accident Severity by Age of Drivers
+```{r Accident Severity by Age of Drivers}
+
+df %>% group_by(Age_Band,Casualty_Outcome) %>% 
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+    ggplot(aes(x=Casualty_Outcome, y=total_accidents,fill=Age_Band)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident by Age of Drivers") +
+    xlab("Accident Severity") + ylab("Total Accidents")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+### Accident Severity Proportion by Age of Driver
+```{r}
+
+df %>% 
+  group_by(Age_Band,Casualty_Outcome) %>%   
+  dplyr::summarize(total_accidents=n_distinct(Accident_Index)) %>%
+  mutate(freq = percent(total_accidents / sum(total_accidents))) %>%
+    ggplot(aes(x=Casualty_Outcome, y=freq,fill=Age_Band)) +
+    geom_bar(stat="identity", position="dodge")+
+    ggtitle("Accident Severity Proportion by Age of Driver") +
+    xlab("Accident Severity") + ylab("Accident Severity Proportion")+
+    theme(plot.title = element_text(hjust = 0.5), panel.background = element_blank(),
+          axis.ticks.y=element_blank())
+
+```
+
+### Comparison by Engine CC
+
+```{r make_plot_engine_cc}
+
+func_plotHistogram(df, round(df$Engine_Capacity_.CC./5000), df$Casualty_Outcome, "Engine CC * 5000", "# of Accidents", "Accidents by Engine CC", "Accident Severity")
+
+```
+
+## Inferential Statistics
+
+### Test of Independence: Accident Severity vs Hours
+```{r Chi-squared test}
+
+# As the p-value is significantly less than 0.05, we reject with the Null hypothesis that the accident severity is independent of the hours.
+chisq.test(acc_time_severity)
+
+```
+####  Test of Independence: Accident Severity vs Weekend night
+  *   Again we reject with the Null hypothesis that the accident severity is independent of Weekend night hours.
+  
+### Test of Independence: Accident Severity vs Weather, Area Type and Junction Type
+```{r Test of Independence: Accident Severity vs Weather, Area Type and Junction Type}
+
+# All our previous findings are with 95% CI statistically correct as we always have a p-value < 0.05
+
+acc_weather_severity<-table(df$Weather,df$Casualty_Outcome)
+acc_area_severity<-table(df$Urban_Rural,df$Casualty_Outcome)
+acc_junction_severity<-table(df$Junction,df$Casualty_Outcome)
+chisq.test(acc_weather_severity)
+chisq.test(acc_area_severity)
+chisq.test(acc_junction_severity)
+
+```
